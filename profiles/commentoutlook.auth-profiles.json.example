@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "savedAt": "2026-03-18T00:00:00.000Z",
+  "source": {
+    "kind": "openclaw-openai-oauth-switch",
+    "profileKey": "openai-codex:default"
+  },
+  "profiles": {
+    "openai-codex:default": {
+      "type": "oauth",
+      "provider": "openai-codex",
+      "access": "<REDACTED_ACCESS_TOKEN>",
+      "refresh": "<REDACTED_REFRESH_TOKEN>",
+      "expires": 0,
+      "accountId": "<REDACTED_ACCOUNT_ID>"
+    }
+  },
+  "usageStats": {
+    "openai-codex:default": {
+      "errorCount": 0,
+      "lastUsed": 0
+    }
+  }
+}
