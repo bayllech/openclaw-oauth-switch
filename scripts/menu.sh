@@ -91,6 +91,9 @@ t() {
     zh-CN:flow_line_7) echo "- 运行：openclaw models auth login --provider openai-codex" ;;
     zh-CN:flow_line_8) echo "- 让你粘贴 localhost 回调链接" ;;
     zh-CN:flow_line_9_prefix) echo "- 把新登录账号保存为：" ;;
+    zh-CN:handoff_tip_1) echo "- 建议先安装并使用 context-handoff skill，把当前对话窗里需要延续的内容先保存起来" ;;
+    zh-CN:handoff_tip_2) echo "  例如保存会话摘要或项目摘要，方便切到新账号后继续回复" ;;
+    zh-CN:handoff_tip_3) echo "  因为下面会清 main sessions，并恢复干净的 openai-codex:default 声明" ;;
     zh-CN:confirm_real) echo "确认执行真实流程？(y/N): " ;;
     zh-CN:cancelled) echo "[INFO] 已取消。" ;;
     zh-CN:no_legacy_state) echo "[INFO] 没有待继续的旧版登录向导状态。" ;;
@@ -140,6 +143,9 @@ t() {
     en:flow_line_7) echo "- run: openclaw models auth login --provider openai-codex" ;;
     en:flow_line_8) echo "- ask you to paste the localhost redirect URL" ;;
     en:flow_line_9_prefix) echo "- save the newly logged-in account as: " ;;
+    en:handoff_tip_1) echo "- Recommended first: install and use the context-handoff skill to save any chat-window context you want to keep" ;;
+    en:handoff_tip_2) echo "  For example, save a session summary or project summary before switching accounts" ;;
+    en:handoff_tip_3) echo "  because the next steps will clear main sessions and restore a clean openai-codex:default declaration" ;;
     en:confirm_real) echo "Continue with real execution? (y/N): " ;;
     en:cancelled) echo "[INFO] Cancelled." ;;
     en:no_legacy_state) echo "[INFO] No pending login wizard state found." ;;
@@ -229,6 +235,10 @@ add_new_account() {
   echo "$(t flow_line_7)"
   echo "$(t flow_line_8)"
   echo "$(t flow_line_9_prefix)$new_name"
+  echo
+  echo "$(t handoff_tip_1)"
+  echo "$(t handoff_tip_2)"
+  echo "$(t handoff_tip_3)"
   echo
   read -r -p "$(t confirm_real)" confirm
   if [[ "$confirm" =~ ^[Yy]$ ]]; then
