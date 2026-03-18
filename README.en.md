@@ -2,135 +2,74 @@
 
 [中文说明](./README.md)
 
-A small script toolkit for **saving, adding, switching, and managing multiple OpenAI OAuth logins** used by OpenClaw.
+A practical multi-account OpenClaw OpenAI OAuth switcher for normal users.
+
+It solves a simple problem:
+
+- save the current account
+- add a new account
+- switch between saved accounts
+- reduce account mix-ups caused by stale sessions or stale `openai-codex:default` state
 
 ---
 
-## What this project is
+## When this is useful
 
-This project is designed for workflows where:
+If you already use:
 
-- you already use `openclaw models auth login --provider openai-codex`
-- you want to keep more than one OpenAI OAuth account snapshot
-- you want to manage them with a **simple menu + repeatable scripts**
-- you want something that can be cleaned up and published to GitHub without leaking your own tokens
+```bash
+openclaw models auth login --provider openai-codex
+```
 
-This is **not** just a “two-account switcher” — it is a **multi-account profile manager**.
+and you want to:
+
+- keep multiple OpenAI OAuth accounts on one machine
+- switch back to a saved account later
+- give yourself or other people a simpler menu-based tool
+
+this project is for that.
 
 ---
 
-## What this project does
+## What it can do
 
-It treats the currently active OpenClaw OpenAI OAuth login as a snapshot that can be saved and switched.
+- Save the current account as a profile
+- Add a new account with a guided flow
+- List saved profiles
+- Switch to a saved profile
+- Show the current active status
+- Switch menu language between Chinese and English
 
-It helps you:
-
-1. Save the current active OpenAI OAuth login as a named profile
-2. Add a brand-new OpenAI account through a guided CLI flow
-3. Save that newly logged-in account as another named profile
-4. Switch between any number of saved profiles later
-5. Optionally restart gateway and clear sessions during switching
-
-For example, you can keep:
-
-- `work`
-- `personal`
-- `team-a`
-- `backup`
-- `testing`
-
-At any given moment, the currently active account is still mapped to:
+The active account always uses:
 
 - `openai-codex:default`
 
-The point of these saved snapshots is to let you safely and repeatedly replace that active identity.
-
----
-
-## Important security warning
-
-Saved profile files usually contain sensitive credentials, such as:
-
-- access token
-- refresh token
-- account ID
-- token expiry metadata
-
-So please:
-
-- **never commit real `*.auth-profiles.json` files to a public repository**
-- **never share your real snapshots with other people**
-- when publishing publicly, only keep scripts, the README files, and redacted examples
-
-This repository is structured so real profile files are ignored by Git by default.
-
----
-
-## Default target paths
-
-Current scripts target the default main-agent auth store used by OpenClaw:
-
-- `~/.openclaw/agents/main/agent/auth-profiles.json`
-
-And the default config file:
-
-- `~/.openclaw/openclaw.json`
-
-If your setup differs, you can override the root path with:
-
-```bash
-OPENCLAW_ROOT=/your/custom/.openclaw bash scripts/show-current.sh
-```
-
----
-
-## Project structure
-
-```text
-openclaw-oauth-switch/
-├─ README.md
-├─ README.en.md
-├─ .gitignore
-├─ profiles/
-│  ├─ README.md
-│  ├─ sample.auth-profiles.json.example
-│  └─ .gitignore
-├─ backups/                 # generated locally, ignored by git
-├─ state/                   # generated locally, ignored by git
-└─ scripts/
-   ├─ lib.sh
-   ├─ init-project.sh
-   ├─ backup-current.sh
-   ├─ save-current-as.sh
-   ├─ add-account.sh
-   ├─ list-profiles.sh
-   ├─ switch-profile.sh
-   ├─ show-current.sh
-   ├─ prepare-new-login.sh            # legacy split flow, optional
-   ├─ save-logged-in-snapshot.sh      # legacy split flow, optional
-   └─ menu.sh
-```
+Saved accounts are stored locally in `profiles/`.
 
 ---
 
 ## Quick start
 
-### 1) Initialize the project
+### 1. Initialize
 
 ```bash
 cd /path/to/openclaw-oauth-switch
 bash scripts/init-project.sh
 ```
 
-This script will:
+### 2. Open the menu
 
-- create `profiles/`, `backups/`, and `state/`
-- install safe `.gitignore` rules
-- check whether the expected OpenClaw files exist
+```bash
+bash scripts/menu.sh
+```
 
-### 2) Save your current account
+On first run, the menu asks for a language and remembers it for later.
 
-If OpenClaw is already logged in with one OpenAI account, save it as a profile:
+---
+
+## Most common actions
+
+### Save the current account
 
 ```bash
 bash scripts/save-current-as.sh work
@@ -142,304 +81,175 @@ This creates:
 profiles/work.auth-profiles.json
 ```
 
-### 3) Use the menu for the easiest path
-
-```bash
-bash scripts/menu.sh
-```
-
-For non-technical users, the menu is the recommended entry point.
-
-On first run, the menu asks the user to choose a language:
-
-- English
-- 简体中文
-
-That choice is saved locally in `state/settings.json` and reused on later runs.
-
-You can still change it manually later from the menu.
-
 ---
 
-## Core workflows
-
-### A. Save the currently active account
+### Add a new account
 
 ```bash
-bash scripts/save-current-as.sh my-main-account
+bash scripts/add-account.sh <new-name> [current-name-to-save]
 ```
 
-### B. Add a NEW account in one guided flow
+Example:
 
 ```bash
-bash scripts/add-account.sh <new-profile-name> [current-profile-name-to-save]
-```
-
-Examples:
-
-```bash
-bash scripts/add-account.sh personal
 bash scripts/add-account.sh personal work
 ```
 
-The second example means:
+This means:
 
-- save the current active account as `work`
-- clear the old active OAuth state
-- start a fresh OpenClaw OAuth login
-- save the newly logged-in account as `personal`
+1. save the current account as `work`
+2. clean old state
+3. start a fresh OAuth login
+4. save the newly logged-in account as `personal`
 
-#### What the guided add-account flow does
+This guided flow automatically handles:
 
-When you run `add-account.sh`, it will:
+- stopping gateway
+- clearing main sessions
+- removing old `openai-codex:default`
+- restoring a clean OAuth declaration
+- starting the login command
+- asking you to paste the localhost callback URL
+- saving the new account
 
-1. optionally save the current active account under a name you choose
-2. back up `openclaw.json`, `auth-profiles.json`, and main sessions
-3. stop gateway
-4. clear main sessions
-5. remove the current `openai-codex:default` from the auth store
-6. restore a clean `openai-codex:default` OAuth declaration in `openclaw.json`
-7. start `openclaw models auth login --provider openai-codex`
-8. let you complete browser login
-9. ask you to paste the final localhost redirect URL back into the terminal
-10. save the newly authenticated account as a named profile
+You still need to do two manual steps:
 
-The important part is this:
+1. finish the login in a browser
+2. paste the final localhost callback URL back into the terminal
 
-Before starting the new login, the flow deliberately performs **session clearing** and a **clean `openai-codex:default` reset**.
+---
 
-That helps avoid a common failure mode:
-
-Login appears to succeed, but the environment is still effectively using old account state.
-
-#### Manual steps still required
-
-The guided flow is as automated as practical, but two user actions still remain:
-
-1. open the auth URL in a browser and log in
-2. paste the final localhost redirect URL back into the terminal
-
-That is still much easier than manually remembering the full prep and cleanup workflow.
-
-### C. List saved profiles
+### List saved accounts
 
 ```bash
 bash scripts/list-profiles.sh
 ```
 
-### D. Show current active auth status
+---
 
-```bash
-bash scripts/show-current.sh
-```
-
-The status view masks sensitive identifiers and only shows whether access/refresh tokens exist, not the raw tokens themselves.
-
-### E. Switch to a saved account
+### Switch accounts
 
 Fast switch:
 
 ```bash
-bash scripts/switch-profile.sh my-main-account
+bash scripts/switch-profile.sh work
 ```
 
-Full switch, recommended in most cases:
+Recommended full switch:
 
 ```bash
-bash scripts/switch-profile.sh --full my-main-account
+bash scripts/switch-profile.sh --full work
 ```
 
-`--full` does the following:
+`--full` will:
 
-- stops gateway
-- applies the selected snapshot to `openai-codex:default`
-- clears main-agent sessions
-- starts gateway again
+- stop gateway
+- apply the selected profile to `openai-codex:default`
+- clear main sessions
+- start gateway again
 
-After a full switch, it is recommended to go back to chat and send:
+After switching, it is recommended to send this in chat:
 
 ```text
 /new
 ```
 
-That helps avoid stale session context.
+---
+
+### Show current status
+
+```bash
+bash scripts/show-current.sh
+```
+
+It masks sensitive values and does not print raw tokens.
 
 ---
 
-## Menu mode
+## Menu overview
 
-Run:
+The main menu is designed for normal users:
 
 ```bash
 bash scripts/menu.sh
 ```
 
-Recommended menu usage:
+Common entries:
 
-1. **Show current active auth status**
-2. **Save current account as a profile**
-3. **Add a NEW account (guided)**
-4. **Switch to a saved profile**
-5. **Change language** if needed
+1. Show current active auth status
+2. List saved profiles
+3. Save current account as a profile
+4. Add a NEW account (guided)
+5. Switch to a saved profile
+6. Advanced options
+7. Change language
 
-Less common actions such as:
+Advanced options contain:
 
 - low-level auth backup
-- legacy split-flow resume
+- legacy compatibility flow
 
-are grouped under **Advanced options**, so the main menu stays easier for new users.
-
----
-
-## What exactly is saved
-
-This project saves only the minimal snapshot needed for switching the OpenAI OAuth identity:
-
-- `profiles.openai-codex:default`
-- `usageStats.openai-codex:default` (if present)
-
-It does **not** intentionally overwrite unrelated provider entries when switching.
-
-That is safer than replacing the whole auth store file with a broad copy.
+Most users will not need the advanced menu.
 
 ---
 
-## Recommended naming rules
+## Security reminder
 
-Use short, boring names:
+`profiles/*.auth-profiles.json` usually contains sensitive data such as:
 
-- `work`
-- `personal`
-- `team-a`
-- `backup`
-- `plus-account`
+- access token
+- refresh token
+- account ID
 
-Avoid:
+So:
 
-- spaces
-- shell-special characters
-- very long names
+- **do not upload real profile files to a public repository**
+- **do not send real profile files to other people**
+- for public GitHub release, keep only scripts, README files, and example files
 
-Allowed characters are:
-
-- letters
-- numbers
-- dot (`.`)
-- underscore (`_`)
-- hyphen (`-`)
+This repo already ignores real profiles, `backups/`, and `state/` by default.
 
 ---
 
-## Troubleshooting
+## Default file locations
 
-### `openai-codex:default not found`
+By default, the scripts use these OpenClaw files:
 
-That means the current auth store does not contain an active OpenAI Codex OAuth snapshot yet.
+- `~/.openclaw/agents/main/agent/auth-profiles.json`
+- `~/.openclaw/openclaw.json`
 
-Try:
+If your OpenClaw root is different, override it like this:
 
 ```bash
-bash scripts/show-current.sh
+OPENCLAW_ROOT=/your/custom/.openclaw bash scripts/show-current.sh
 ```
-
-If nothing is there, complete a login first:
-
-```bash
-openclaw models auth login --provider openai-codex
-```
-
-### Switching finished, but behavior still looks old
-
-Try the full flow:
-
-```bash
-bash scripts/switch-profile.sh --full <profile-name>
-```
-
-Then go back to chat and send:
-
-```text
-/new
-```
-
-### New login succeeded, but it still seems to use the old account
-
-This usually means the environment was not fully cleaned before login, or the browser reused old state.
-
-Use the guided flow:
-
-```bash
-bash scripts/add-account.sh <new-profile-name> [current-profile-name-to-save]
-```
-
-That flow explicitly:
-
-- clears main sessions
-- removes old `openai-codex:default`
-- restores a clean auth declaration first
-
-Also use:
-
-- incognito/private mode
-- or a fresh browser profile
-
-### I want to see what account is active, but without dumping tokens
-
-Use:
-
-```bash
-bash scripts/show-current.sh
-```
-
-It masks account identifiers and only shows token presence, not raw token values.
 
 ---
 
-## Publishing to GitHub safely
+## Before publishing to GitHub
 
-Before pushing:
+Before pushing, check:
 
-1. make sure `profiles/*.auth-profiles.json` contains no real secrets in tracked files
-2. make sure `backups/` and `state/` are ignored
-3. keep only redacted examples in `profiles/*.example`
-4. double-check `git status`
+```bash
+git status
+git ls-files
+```
 
-A safe public repo usually contains:
+Make sure you are not publishing:
 
-- `README.md`
-- `README.en.md`
-- `scripts/*.sh`
-- `profiles/*.example`
-- `profiles/README.md`
-- `.gitignore`
-
-And does **not** contain:
-
-- real access tokens
-- real refresh tokens
-- real account IDs
-- personal email addresses embedded in snapshots
+- real `profiles/*.auth-profiles.json`
+- `backups/`
+- local sensitive `state/` data
+- real tokens, refresh tokens, or email addresses
 
 ---
 
-## Suggested future improvements
+## One-line summary
 
-If you want to keep evolving this project, useful next steps would be:
+If you only want the main entry points, remember these:
 
-- detect token expiry more explicitly
-- support multiple providers, not just `openai-codex`
-- add export/import helpers with extra safety prompts
-- add a clearer TUI
-- add a "doctor" script that checks common path/layout differences
-
----
-
-## Usage note
-
-Use at your own risk. These scripts directly manipulate local OpenClaw auth files.
-
-If you publish this project, make it very clear that users should:
-
-- back up before switching
-- never publish real auth snapshots
-- understand that browser login plus pasting the localhost callback URL is still part of the OAuth flow
+```bash
+bash scripts/menu.sh
+bash scripts/add-account.sh <new-name> [current-name]
+bash scripts/switch-profile.sh --full <name>
+```
