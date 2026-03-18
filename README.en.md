@@ -4,72 +4,42 @@
 
 A practical multi-account OpenClaw OpenAI OAuth switcher for normal users.
 
-It solves a simple problem:
-
-- save the current account
-- add a new account
-- switch between saved accounts
-- reduce account mix-ups caused by stale sessions or stale `openai-codex:default` state
-
 ---
 
-## When this is useful
+## Start here: use the menu first
 
-If you already use:
-
-```bash
-openclaw models auth login --provider openai-codex
-```
-
-and you want to:
-
-- keep multiple OpenAI OAuth accounts on one machine
-- switch back to a saved account later
-- give yourself or other people a simpler menu-based tool
-
-this project is for that.
-
----
-
-## What it can do
-
-- Save the current account as a profile
-- Add a new account with a guided flow
-- List saved profiles
-- Switch to a saved profile
-- Show the current active status
-- Switch menu language between Chinese and English
-
-The active account always uses:
-
-- `openai-codex:default`
-
-Saved accounts are stored locally in `profiles/`.
-
----
-
-## Quick start
-
-### 1. Initialize
-
-```bash
-cd /path/to/openclaw-oauth-switch
-bash scripts/init-project.sh
-```
-
-### 2. Open the menu
+Most users **do not need to remember commands**. Just run:
 
 ```bash
 bash scripts/menu.sh
 ```
 
+The menu already covers the main actions:
+
+1. Show current active auth status
+2. List saved profiles
+3. Save current account as a profile
+4. Add a NEW account (guided)
+5. Switch to a saved profile
+6. Advanced options
+7. Change language
+
+### Best way to use it
+
+If you are just using the tool normally, these are the main things you need:
+
+- **Save current account**: save the current login state under a name like `work`
+- **Add a NEW account (guided)**: log in to a new account and save it as another profile
+- **Switch to a saved profile**: switch back to a previously saved account
+- **Show current status**: confirm which account state is active now
+
 On first run, the menu asks for a language and remembers it for later.
 
 ---
 
-## Most common actions
+## Most common scenarios
 
-### Save the current account
+### Scenario 1: save the current account first
 
 ```bash
 bash scripts/save-current-as.sh work
@@ -81,28 +51,27 @@ This creates:
 profiles/work.auth-profiles.json
 ```
 
+If you do not want to remember commands, you can also just choose:
+
+- `Save current account as a profile`
+
+inside `menu.sh`.
+
 ---
 
-### Add a new account
+### Scenario 2: add a new account
+
+The recommended way is to use the menu:
 
 ```bash
-bash scripts/add-account.sh <new-name> [current-name-to-save]
+bash scripts/menu.sh
 ```
 
-Example:
+Then choose:
 
-```bash
-bash scripts/add-account.sh personal work
-```
+- `Add a NEW account (guided)`
 
-This means:
-
-1. save the current account as `work`
-2. clean old state
-3. start a fresh OAuth login
-4. save the newly logged-in account as `personal`
-
-This guided flow automatically handles:
+This flow automatically handles:
 
 - stopping gateway
 - clearing main sessions
@@ -117,36 +86,37 @@ You still need to do two manual steps:
 1. finish the login in a browser
 2. paste the final localhost callback URL back into the terminal
 
----
-
-### List saved accounts
+If you prefer direct CLI, you can run:
 
 ```bash
-bash scripts/list-profiles.sh
+bash scripts/add-account.sh <new-name> [current-name-to-save]
+```
+
+Example:
+
+```bash
+bash scripts/add-account.sh personal work
 ```
 
 ---
 
-### Switch accounts
+### Scenario 3: switch back to a saved account
 
-Fast switch:
+Recommended way:
 
 ```bash
-bash scripts/switch-profile.sh work
+bash scripts/menu.sh
 ```
 
-Recommended full switch:
+Then choose:
+
+- `Switch to a saved profile`
+
+If you want direct CLI switching:
 
 ```bash
 bash scripts/switch-profile.sh --full work
 ```
-
-`--full` will:
-
-- stop gateway
-- apply the selected profile to `openai-codex:default`
-- clear main sessions
-- start gateway again
 
 After switching, it is recommended to send this in chat:
 
@@ -156,40 +126,60 @@ After switching, it is recommended to send this in chat:
 
 ---
 
+## What this project is for
+
+It solves a simple problem:
+
+- save the current account
+- add a new account
+- switch between saved accounts
+- reduce account mix-ups caused by stale sessions or stale `openai-codex:default` state
+
+The active account always uses:
+
+- `openai-codex:default`
+
+Saved accounts are stored locally in `profiles/`.
+
+---
+
+## Quick command reference
+
+### Open the menu
+
+```bash
+bash scripts/menu.sh
+```
+
+### List saved profiles
+
+```bash
+bash scripts/list-profiles.sh
+```
+
 ### Show current status
 
 ```bash
 bash scripts/show-current.sh
 ```
 
-It masks sensitive values and does not print raw tokens.
-
----
-
-## Menu overview
-
-The main menu is designed for normal users:
+### Save current account
 
 ```bash
-bash scripts/menu.sh
+bash scripts/save-current-as.sh <name>
 ```
 
-Common entries:
+### Add a new account
 
-1. Show current active auth status
-2. List saved profiles
-3. Save current account as a profile
-4. Add a NEW account (guided)
-5. Switch to a saved profile
-6. Advanced options
-7. Change language
+```bash
+bash scripts/add-account.sh <new-name> [current-name]
+```
 
-Advanced options contain:
+### Switch account
 
-- low-level auth backup
-- legacy compatibility flow
-
-Most users will not need the advanced menu.
+```bash
+bash scripts/switch-profile.sh --full <name>
+```
 
 ---
 
@@ -241,15 +231,3 @@ Make sure you are not publishing:
 - `backups/`
 - local sensitive `state/` data
 - real tokens, refresh tokens, or email addresses
-
----
-
-## One-line summary
-
-If you only want the main entry points, remember these:
-
-```bash
-bash scripts/menu.sh
-bash scripts/add-account.sh <new-name> [current-name]
-bash scripts/switch-profile.sh --full <name>
-```
